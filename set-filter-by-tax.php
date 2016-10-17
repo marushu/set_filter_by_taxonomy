@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name:     Set Filter By Tax
- * Plugin URI:      PLUGIN SITE HERE
- * Description:     PLUGIN DESCRIPTION HERE
- * Author:          YOUR NAME HERE
- * Author URI:      YOUR SITE HERE
+ * Plugin Name:     Set fileter by tax.
+ * Plugin URI:      http://
+ * Description:     Set multiple tax filter at custom post type admin panel.
+ * Author:          maruhsu
+ * Author URI:      https://private.hibou-web.com/
  * Text Domain:     set-filter-by-tax
  * Domain Path:     /languages
  * Version:         0.1.0
@@ -13,18 +13,11 @@
  */
 
 /**
- * Add admin filter
+ * Set multiple filter ad custom post type admin panel.
  */
-/**
- * Display a custom taxonomy dropdown in admin
- * @author Mike Hemberger
- * @link http://thestizmedia.com/custom-post-type-filter-admin-custom-taxonomy/
- */
-add_action( 'restrict_manage_posts', 'renove_filter_post_type_by_taxonomy' );
+function multiple_filter_at_cpt() {
 
-function renove_filter_post_type_by_taxonomy() {
 	global $typenow;
-
 	$args       = array(
 		'public'   => true,
 		'_builtin' => true,
@@ -62,14 +55,15 @@ function renove_filter_post_type_by_taxonomy() {
 		}
 	}
 }
+add_action( 'restrict_manage_posts', 'multiple_filter_at_cpt' );
 
 /**
- * Filter posts by taxonomy in admin
- * @author  Mike Hemberger
- * @link    http://thestizmedia.com/custom-post-type-filter-admin-custom-taxonomy/
+ * Set multiple filter at custom post type. And fire.
+ *
+ * @param $query
  */
-add_filter( 'parse_query', 'renove_convert_id_to_term_in_query' );
-function renove_convert_id_to_term_in_query( $query ) {
+function multiple_filter_taxonomy_term( $query ) {
+
 	global $pagenow, $typenow;
 	$taxonomies = get_object_taxonomies( $typenow );
 	$post_type = $query->query['post_type'];
@@ -100,3 +94,4 @@ function renove_convert_id_to_term_in_query( $query ) {
 
 	}
 }
+add_filter( 'parse_query', 'multiple_filter_taxonomy_term' );
