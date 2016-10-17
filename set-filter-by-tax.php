@@ -25,27 +25,42 @@ add_action( 'restrict_manage_posts', 'renove_filter_post_type_by_taxonomy' );
 function renove_filter_post_type_by_taxonomy() {
 	global $typenow;
 
-	if ( $typenow === 'post' )
+	$args       = array(
+		'public'   => true,
+		'_builtin' => true,
+	);
+	$custom_post_types = get_post_types( $args );
+	$custom_post_types = array_values( $custom_post_types );
+
+	if( empty( $typenow ) || in_array( $typenow, $custom_post_types ) === true )
 		return;
 
 	$taxonomies = get_object_taxonomies( $typenow );
-	$taxonomies = implode( ',', $taxonomies );
+	$post_type = get_post_type();
 
-	$post_type = $typenow; // change to your post type
-	$taxonomy  = $taxonomies; // change to your taxonomy
 	if ( $typenow == $post_type ) {
-		$selected      = isset( $_GET[ $taxonomy ] ) ? $_GET[ $taxonomy ] : '';
-		$info_taxonomy = get_taxonomy( $taxonomy );
-		wp_dropdown_categories( array(
-			'show_option_all' => __( "Show All {$info_taxonomy->label}" ),
-			'taxonomy'        => $taxonomy,
-			'name'            => $taxonomy,
-			'orderby'         => 'name',
-			'selected'        => $selected,
-			'show_count'      => true,
-			'hide_empty'      => true,
-		) );
-	};
+
+		foreach ( $taxonomies as $tax ) {
+
+			if ( ! empty( $tax ) && ! is_wp_error( $tax ) ) {
+
+				$selected = isset( $_GET[ $tax ] ) ? $_GET[ $tax ] : '';
+				$info_taxonomy = get_taxonomy( $tax );
+
+				wp_dropdown_categories( array(
+					'show_option_all' => __( "Show All {$info_taxonomy->label}" ),
+					'taxonomy'        => $tax,
+					'name'            => $tax,
+					'orderby'         => 'name',
+					'selected'        => $selected,
+					'show_count'      => true,
+					'hide_empty'      => true,
+				) );
+
+			}
+
+		}
+	}
 }
 
 /**
@@ -57,21 +72,31 @@ add_filter( 'parse_query', 'renove_convert_id_to_term_in_query' );
 function renove_convert_id_to_term_in_query( $query ) {
 	global $pagenow, $typenow;
 	$taxonomies = get_object_taxonomies( $typenow );
-	$taxonomies = implode( ',', $taxonomies );
+	$post_type = $query->query['post_type'];
 
-	$post_type = $typenow; // change to your post type
-	$taxonomy  = $taxonomies; // change to your taxonomy
-	$q_vars    = &$query->query_vars;
-	if ( $pagenow == 'edit.php'
-	     && isset( $q_vars[ 'post_type' ] )
-	     && $q_vars[ 'post_type' ] == $post_type
-	     && isset( $q_vars[ $taxonomy ] )
-	     && is_numeric( $q_vars[ $taxonomy ] )
-	     && $q_vars[ $taxonomy ] != 0
-	) {
+	if ( ! empty( $taxonomies ) && ! is_wp_error( $taxonomies ) ) {
 
-		$term                = get_term_by( 'id', $q_vars[ $taxonomy ], $taxonomy );
-		$q_vars[ $taxonomy ] = $term->slug;
+		foreach ( $taxonomies as $tax ) {
+
+			if ( ! empty( $tax ) ) {
+
+				$q_vars = &$query->query_vars;
+				if ( $pagenow == 'edit.php'
+				     && isset( $q_vars[ 'post_type' ] )
+				     && $q_vars[ 'post_type' ] == $post_type
+				     && isset( $q_vars[ $tax ] )
+				     && is_numeric( $q_vars[ $tax ] )
+				     && $q_vars[ $tax ] != 0
+				) {
+
+					$term           = get_term_by( 'id', $q_vars[ $tax ], $tax );
+					$q_vars[ $tax ] = $term->slug;
+
+				}
+
+			}
+
+		}
 
 	}
 }
